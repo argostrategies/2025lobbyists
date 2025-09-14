@@ -9741,63 +9741,69 @@ export default function LobbyistDirectory() {
 
       <div className="space-y-6">
         {filtered.map((lobbyist, index) => (
-          <Card key={index}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
+         <Card key={index} className="border-b border-gray-200">
+  <CardContent className="p-4">
+    <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
 
-                  {lobbyist.address && (
-                    <p className="text-sm text-gray-700">
-                      📍{" "}
-                      <a
-                        className="underline"
-                        href={mapsHref(lobbyist.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {lobbyist.address}
-                      </a>
-                    </p>
-                  )}
+        {lobbyist.address && (
+          <p className="text-sm text-gray-700 flex items-center gap-1">
+            <a
+              className="text-gray-600 hover:text-blue-600"
+              href={mapsHref(lobbyist.address)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              📍
+            </a>
+            <span>{lobbyist.address}</span>
+          </p>
+        )}
 
-                  {lobbyist.email && (
-                    <p className="text-sm">
-                      📧{" "}
-                      <a className="underline" href={mailHref(lobbyist.email)}>
-                        {lobbyist.email}
-                      </a>
-                    </p>
-                  )}
+        {lobbyist.email && (
+          <p className="text-sm flex items-center gap-1">
+            <a
+              className="text-gray-600 hover:text-blue-600"
+              href={mailHref(lobbyist.email)}
+            >
+              📧
+            </a>
+            <span>{lobbyist.email}</span>
+          </p>
+        )}
 
-                  {lobbyist.phone && (
-                    <p className="text-sm">
-                      📞{" "}
-                      <a className="underline" href={telHref(lobbyist.phone)}>
-                        {lobbyist.phone}
-                      </a>
-                    </p>
-                  )}
-                </div>
+        {lobbyist.phone && (
+          <p className="text-sm flex items-center gap-1">
+            <a
+              className="text-gray-600 hover:text-blue-600"
+              href={telHref(lobbyist.phone)}
+            >
+              📞
+            </a>
+            <span>{lobbyist.phone}</span>
+          </p>
+        )}
+      </div>
 
-                <div className="text-sm bg-gray-100 rounded px-2 py-1">
-                  {lobbyist.clients.length} client
-                  {lobbyist.clients.length === 1 ? "" : "s"}
-                </div>
-              </div>
+      <div className="text-sm bg-gray-100 rounded px-2 py-1">
+        {lobbyist.clients.length} client
+        {lobbyist.clients.length === 1 ? "" : "s"}
+      </div>
+    </div>
 
-              {lobbyist.clients.length > 0 && (
-                <div className="mt-3">
-                  <h3 className="font-medium">Clients</h3>
-                  <ul className="list-disc list-inside text-sm mt-1">
-                    {lobbyist.clients.map((client, i) => (
-                      <li key={i}>{client}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    {lobbyist.clients.length > 0 && (
+      <div className="mt-3 ml-4">
+        <h3 className="font-medium">Clients</h3>
+        <ul className="list-disc list-inside text-sm mt-1 ml-4">
+          {lobbyist.clients.map((client, i) => (
+            <li key={i}>{typeof client === "string" ? client : client.name}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </CardContent>
+</Card>
         ))}
       </div>
     </div>
