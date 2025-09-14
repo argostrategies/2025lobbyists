@@ -9649,7 +9649,7 @@ const lobbyists = [
 }
 ];
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Input } from "./components/ui/input";
 import { Card, CardContent } from "./components/ui/card";
 
