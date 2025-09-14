@@ -9657,52 +9657,37 @@ const lobbyists = [
 export default function LobbyistDirectory() {
   const [search, setSearch] = useState("");
 
-  // --- Helpers for name normalization ---
+  // --- helpers for formatting & links ---
   const UPPER_EXCEPTIONS = new Set([
     "LLC","LLP","PLLC","INC","CO","CO.","WA","OR","ID","P.S.","PS","PC","PSC","CPA"
   ]);
-
   const isAllCaps = (s) => !!s && s === s.toUpperCase();
-
   const titleWord = (w) => {
-    if (UPPER_EXCEPTIONS.has(w)) return w; // keep acronyms/suffixes
-    // Handle O' and Mc/Mac prefixes
-    if (/^O'\w+/i.test(w)) {
-      const rest = w.slice(2).toLowerCase();
-      return "O'" + rest.charAt(0).toUpperCase() + rest.slice(1);
-    }
-    if (/^Mc\w+/i.test(w)) {
-      const rest = w.slice(2).toLowerCase();
-      return "Mc" + rest.charAt(0).toUpperCase() + rest.slice(1);
-    }
-    if (/^Mac\w+/i.test(w)) {
-      const rest = w.slice(3).toLowerCase();
-      return "Mac" + rest.charAt(0).toUpperCase() + rest.slice(1);
-    }
-    // Default Title Case
+    if (UPPER_EXCEPTIONS.has(w)) return w;
+    if (/^O'\w+/i.test(w)) { const rest = w.slice(2).toLowerCase(); return "O'" + rest.charAt(0).toUpperCase() + rest.slice(1); }
+    if (/^Mc\w+/i.test(w)) { const rest = w.slice(2).toLowerCase(); return "Mc" + rest.charAt(0).toUpperCase() + rest.slice(1); }
+    if (/^Mac\w+/i.test(w)) { const rest = w.slice(3).toLowerCase(); return "Mac" + rest.charAt(0).toUpperCase() + rest.slice(1); }
     return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
   };
-
   const smartTitleCase = (name) => {
     if (!name) return "";
-    const trimmed = name.trim();
-    if (!isAllCaps(trimmed)) return trimmed; // leave mixed-case as-is
-    return trimmed.split(/\s+/).map((w) => titleWord(w)).join(" ");
+    const t = name.trim();
+    if (!isAllCaps(t)) return t;
+    return t.split(/\s+/).map(titleWord).join(" ");
   };
+  const mapsHref = (addr) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+  const mailHref = (email) => (email ? `mailto:${email}` : undefined);
+  const telHref  = (phone) => (phone ? `tel:${String(phone).replace(/[^0-9+]/g, "")}` : undefined);
 
-  const normalizePhone = (p) => (p || "").toString().trim();
-  const normalizeEmail = (e) => (e || "").toString().trim();
-  const normalizeAddress = (a) => (a || "").toString().trim();
-
-  // Normalize the dataset without mutating original
+  // normalize & filter (don’t mutate original)
   const data = useMemo(
     () =>
       (lobbyists || []).map((l) => ({
         ...l,
         name: smartTitleCase(l.name || ""),
-        email: normalizeEmail(l.email),
-        phone: normalizePhone(l.phone),
-        address: normalizeAddress(l.address),
+        email: (l.email || "").trim(),
+        phone: (l.phone || "").trim(),
+        address: (l.address || "").trim(),
         clients: Array.isArray(l.clients) ? l.clients.filter(Boolean) : [],
       })),
     []
@@ -9719,12 +9704,6 @@ export default function LobbyistDirectory() {
     );
   }, [data, search]);
 
-  const mapsHref = (addr) =>
-    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
-  const mailHref = (email) => (email ? `mailto:${email}` : undefined);
-  const telHref = (phone) =>
-    phone ? `tel:${String(phone).replace(/[^0-9+]/g, "")}` : undefined;
-
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold mb-1">2025 WA Lobbyist Directory</h1>
@@ -9739,79 +9718,87 @@ export default function LobbyistDirectory() {
         className="mb-6"
       />
 
- <div className="space-y-6">
-  {filtered.map((lobbyist, index) => (
-    <div
-      key={index}
-      className="pb-6 border-b border-gray-300 last:border-b-0"
-    >
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
+      {/* list */}
+      <div className="space-y-6">
+        {filtered.map((lobbyist, index) => (
+          <div
+            key={index}
+            className="pb-6 border-b border-gray-300 last:border-b-0"
+          >
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div>
+                    <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
 
-              {lobbyist.address && (
-                <p className="text-sm text-gray-700 flex items-center gap-2">
-                  <a
-                    className="inline-block text-gray-500 hover:text-blue-600 no-underline"
-                    href={mapsHref(lobbyist.address)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    📍
-                  </a>
-                  <span>{lobbyist.address}</span>
-                </p>
-              )}
+                    {lobbyist.address && (
+                      <p className="text-sm text-gray-700 flex items-center gap-2">
+                        <a
+                          className="inline-block text-gray-500 hover:text-blue-600 no-underline"
+                          href={mapsHref(lobbyist.address)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Open address in Google Maps"
+                          title="Open address in Google Maps"
+                        >
+                          📍
+                        </a>
+                        <span>{lobbyist.address}</span>
+                      </p>
+                    )}
 
-              {lobbyist.email && (
-                <p className="text-sm flex items-center gap-2">
-                  <a
-                    className="inline-block text-gray-500 hover:text-blue-600 no-underline"
-                    href={mailHref(lobbyist.email)}
-                  >
-                    📧
-                  </a>
-                  <span>{lobbyist.email}</span>
-                </p>
-              )}
+                    {lobbyist.email && (
+                      <p className="text-sm flex items-center gap-2">
+                        <a
+                          className="inline-block text-gray-500 hover:text-blue-600 no-underline"
+                          href={mailHref(lobbyist.email)}
+                          aria-label="Send email"
+                          title="Send email"
+                        >
+                          📧
+                        </a>
+                        <span>{lobbyist.email}</span>
+                      </p>
+                    )}
 
-              {lobbyist.phone && (
-                <p className="text-sm flex items-center gap-2">
-                  <a
-                    className="inline-block text-gray-500 hover:text-blue-600 no-underline"
-                    href={telHref(lobbyist.phone)}
-                  >
-                    📞
-                  </a>
-                  <span>{lobbyist.phone}</span>
-                </p>
-              )}
-            </div>
+                    {lobbyist.phone && (
+                      <p className="text-sm flex items-center gap-2">
+                        <a
+                          className="inline-block text-gray-500 hover:text-blue-600 no-underline"
+                          href={telHref(lobbyist.phone)}
+                          aria-label="Call phone"
+                          title="Call phone"
+                        >
+                          📞
+                        </a>
+                        <span>{lobbyist.phone}</span>
+                      </p>
+                    )}
+                  </div>
 
-            <div className="text-sm bg-gray-100 rounded px-2 py-1">
-              {lobbyist.clients.length} client
-              {lobbyist.clients.length === 1 ? "" : "s"}
-            </div>
+                  <div className="text-sm bg-gray-100 rounded px-2 py-1">
+                    {lobbyist.clients.length} client
+                    {lobbyist.clients.length === 1 ? "" : "s"}
+                  </div>
+                </div>
+
+                {lobbyist.clients.length > 0 && (
+                  <div className="mt-3 ml-4">
+                    <h3 className="font-medium">Clients</h3>
+                    <ul className="list-disc list-inside text-sm mt-1 ml-4">
+                      {lobbyist.clients.map((client, i) => (
+                        <li key={i}>
+                          {typeof client === "string" ? client : client.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-
-          {lobbyist.clients.length > 0 && (
-            <div className="mt-3 ml-4">
-              <h3 className="font-medium">Clients</h3>
-              <ul className="list-disc list-inside text-sm mt-1 ml-4">
-                {lobbyist.clients.map((client, i) => (
-                  <li key={i}>
-                    {typeof client === "string" ? client : client.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        ))}
+      </div>
     </div>
-  ))}
-</div>
-);
-} 
+  );
+}
