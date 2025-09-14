@@ -9648,24 +9648,73 @@ const lobbyists = [
   ]
 }
 ];
-
 import React, { useState, useMemo } from "react";
-import { Input } from "./components/ui/input";
-import { Card, CardContent } from "./components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 
-function App() {
+
+];
+
+export default function LobbyistDirectory() {
   const [search, setSearch] = useState("");
 
-  const filtered = lobbyists.filter((l) =>
-    l.name.toLowerCase().includes(search.toLowerCase()) ||
+  // --- Helpers for name normalization ---
+  const UPPER_EXCEPTIONS = new Set([
+    "LLC","LLP","PLLC","INC","CO","CO.","WA","OR","ID","P.S.","PS","PC","PSC","CPA"
+  ]);
+  const isAllCaps = (s) => !!s && s === s.toUpperCase();
+  const titleWord = (w) => {
+    if (UPPER_EXCEPTIONS.has(w)) return w;
+    if (/^O'\w+/i.test(w)) {
+      const rest = w.slice(2).toLowerCase();
+      return "O'" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+    if (/^Mc\w+/i.test(w)) {
+      const rest = w.slice(2).toLowerCase();
+      return "Mc" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+    if (/^Mac\w+/i.test(w)) {
+      const rest = w.slice(3).toLowerCase();
+      return "Mac" + rest.charAt(0).toUpperCase() + rest.slice(1);
+    }
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  };
+  const smartTitleCase = (name) => {
+    if (!name) return "";
+    const trimmed = name.trim();
+    if (!isAllCaps(trimmed)) return trimmed;
+    return trimmed.split(/\s+/).map((w) => titleWord(w)).join(" ");
+  };
+
+  // Normalize the dataset
+  const data = useMemo(() =>
+    lobbyists.map((l) => ({
+      ...l,
+      name: smartTitleCase(l.name || ""),
+    })),
+  []);
+
+  const filtered = data.filter((l) =>
+    (l.name || "").toLowerCase().includes(search.toLowerCase()) ||
+    (l.email || "").toLowerCase().includes(search.toLowerCase()) ||
+    (l.address || "").toLowerCase().includes(search.toLowerCase()) ||
     l.clients.some((c) => c.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const mapsHref = (addr) =>
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+  const mailHref = (email) => (email ? `mailto:${email}` : undefined);
+  const telHref = (phone) =>
+    (phone ? `tel:${phone.replace(/[^0-9+]/g, "")}` : undefined);
+
   return (
-    <div className="p-6 max-w-4xl mx-auto font-sans">
+    <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-3xl font-bold mb-4">2025 WA Lobbyist Directory</h1>
+      <p className="text-sm text-gray-600 mb-2">
+        Search by lobbyist, client, email, or address.
+      </p>
       <Input
-        placeholder="Search by lobbyist or client..."
+        placeholder="Search…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-6"
@@ -9673,19 +9722,55 @@ function App() {
       <div className="space-y-6">
         {filtered.map((lobbyist, index) => (
           <Card key={index}>
-            <CardContent>
-              <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
-              <p className="text-sm text-gray-600">{lobbyist.address}</p>
-              <p className="text-sm">📧 {lobbyist.email}</p>
-              <p className="text-sm">📞 {lobbyist.phone}</p>
-              <div className="mt-2">
-                <h3 className="font-medium">Clients:</h3>
-                <ul className="list-disc list-inside text-sm">
-                  {lobbyist.clients.map((client, i) => (
-                    <li key={i}>{client}</li>
-                  ))}
-                </ul>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h2 className="text-xl font-semibold">{lobbyist.name}</h2>
+                  {lobbyist.address && (
+                    <p className="text-sm text-gray-700">
+                      📍{" "}
+                      <a
+                        className="underline"
+                        href={mapsHref(lobbyist.address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {lobbyist.address}
+                      </a>
+                    </p>
+                  )}
+                  {lobbyist.email && (
+                    <p className="text-sm">
+                      📧{" "}
+                      <a className="underline" href={mailHref(lobbyist.email)}>
+                        {lobbyist.email}
+                      </a>
+                    </p>
+                  )}
+                  {lobbyist.phone && (
+                    <p className="text-sm">
+                      📞{" "}
+                      <a className="underline" href={telHref(lobbyist.phone)}>
+                        {lobbyist.phone}
+                      </a>
+                    </p>
+                  )}
+                </div>
+                <div className="text-sm bg-gray-100 rounded px-2 py-1">
+                  {lobbyist.clients.length} client
+                  {lobbyist.clients.length === 1 ? "" : "s"}
+                </div>
               </div>
+              {lobbyist.clients.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="font-medium">Clients</h3>
+                  <ul className="list-disc list-inside text-sm mt-1">
+                    {lobbyist.clients.map((client, i) => (
+                      <li key={i}>{client}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -9693,5 +9778,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
