@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "./components/ui/input";
+import { Card, CardContent } from "./components/ui/card";
 
 /**
  * === IMPORTANT ===
