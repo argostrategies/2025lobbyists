@@ -1,16 +1,7 @@
 import React, { useState, useMemo } from "react";
+// Use RELATIVE imports so CRA can resolve them without alias configuration:
 import { Input } from "./components/ui/input";
 import { Card, CardContent } from "./components/ui/card";
-
-/**
- * === IMPORTANT ===
- * Paste your FULL lobbyists array below, replacing the placeholder.
- * Example structure:
- * const lobbyists = [
- *   { name: "AB Public Affairs", email: "...", phone: "...", address: "...", clients: ["...", "..."] },
- *   ...
- * ];
- */
 
 const lobbyists = [
 {
@@ -9662,6 +9653,7 @@ const lobbyists = [
   ]
 }
 ];
+
 export default function LobbyistDirectory() {
   const [search, setSearch] = useState("");
 
